@@ -1,0 +1,29 @@
+1. How does HashMap work internally in Java 8 and later?
+
+2. Why is ConcurrentHashMap preferred over HashMap in multithreaded applications?
+
+3. What happens when a Spring Boot application starts internally?
+
+4. Why does @Transactional sometimes fail during self-invocation?
+
+5. How would you handle database connection pool exhaustion?
+
+6. How do you prevent duplicate payment processing in a REST API?
+
+7. How would you debug an API that takes 5 seconds to respond?
+
+8. What happens when multiple microservices need to update related data?
+
+9. How would you handle Kafka consumer lag during peak traffic?
+
+10. What is the difference between optimistic locking and pessimistic locking?
+
+11. How would you prevent one failing microservice from affecting the entire system?
+
+12. How do circuit breakers and retry mechanisms work together?
+
+13. How would you handle millions of records in a Spring Boot batch process?
+
+14. How would you secure communication between multiple microservices?
+
+15. How would you design a backend system to handle 10× traffic without downtime?
