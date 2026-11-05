@@ -1,0 +1,43 @@
+Round 1
+
+1. Design an OTP platform.
+2. What can Redis be used for apart from caching?
+3. Explain your project.
+4. Tell me about yourself.
+5. Explain lazy and eager operations in Streams.
+6. Write/implement a Circuit Breaker pattern.
+7. How would you debug a slow method that contains a database call and a downstream service call?
+8. Explain the N+1 problem.
+9. Explain "@Transactional" and its attributes.
+10. Explain the Saga design pattern.
+
+Round 2
+
+Java / Coding
+
+11. Find the longest substring without duplicate characters.
+12. What is treeification in HashMap?
+13. What is the output of:
+
+Integer a = 128;
+Integer b = 128;
+
+System.out.println(a == b);
+
+14. What is the value of an Integer?
+
+15. Write a code snippet that causes an OutOfMemoryError.
+
+16. How would you debug an OOM issue?
+
+REST / API
+
+17. What is content negotiation?
+18. What does an API return?
+19. How do you convert an API response from JSON to XML?
+20. What is API versioning?
+21. Explain the complete flow and methods of an API for addition.
+
+Security
+
+22. Who creates the JWT?
