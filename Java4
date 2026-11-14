@@ -1,0 +1,51 @@
+𝗖𝗼𝗿𝗲 𝗝𝗮𝘃𝗮 ☕
+How do you sort a Map in Java?
+Write a Singleton class. What are the different ways to implement it?
+What is the difference between Comparable and Comparator?
+What are the new features introduced in Java 7, 8, 11, and 17?
+What is try-with-resources?
+What is a multi-catch statement in Java?
+What is the difference between Runnable and Callable?
+Explain the types of exceptions and the Exception hierarchy in Java.
+What are the different Design Patterns in Java?
+Explain the OOP principles with real-world examples.
+Explain ConcurrentHashMap internals.
+How does Java Garbage Collection work?
+
+𝗗𝗦𝗔 / 𝗖𝗼𝗱𝗶𝗻𝗴 💻
+How do you find duplicate strings in a list?
+Write a program to check whether a string is a palindrome.
+Solve Combination Sum II using recursion.
+Using Java Streams: remove odd numbers, multiply each remaining number by a constant, and return the sum.
+Find the missing integer in a consecutive array.
+Move all zeroes to the end of an array.
+Check whether two strings are anagrams.
+Find the longest common prefix among strings.
+Find the Longest Increasing Subsequence.
+Best Time to Buy and Sell Stock.
+Explain and implement Dijkstra’s Algorithm.
+Solve the Coin Change problem for minimum coins.
+Solve the Reverse-Add Palindrome problem.
+
+𝗪𝗲𝗯 / 𝗙𝗿𝗮𝗺𝗲𝘄𝗼𝗿𝗸𝘀 🌐
+What is the difference between REST and SOAP?
+What is Spring Framework?
+Why do we use Spring?
+What is the difference between Spring and Spring Boot?
+How does Autowiring work in Spring?
+What is Spring Security?
+What is a RESTful API?
+What is the difference between HTTP and HTTPS?
+
+𝗦𝘆𝘀𝘁𝗲𝗺 𝗗𝗲𝘀𝗶𝗴𝗻 🏗️
+Explain the design of one of your recent projects.
+How would you design a Fraud Detection System for transactions?
+Design a database for a Ride-Sharing application.
+Design a Data Warehouse for an online retailer.
+Design a News Aggregator.
+
+𝗦𝗲𝗿𝘃𝗲𝗿 / 𝗦𝘆𝘀𝘁𝗲𝗺 🔧
+How do you find the reason behind a server crash?
+How do you check server memory usage?
+How do you debug high CPU or memory issues in a JVM?
+How do you capture Heap Dumps and Thread Dumps?
