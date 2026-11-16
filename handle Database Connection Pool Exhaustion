@@ -1,0 +1,92 @@
+First, understand the problem.
+
+Database connection pool exhaustion occurs when all available database connections are occupied, and new incoming requests cannot get a connection from the pool.
+
+For example:
+- Your Spring Boot application has a connection pool of 20 connections.
+- 20 requests are executing database operations simultaneously.
+- Another 10 requests arrive.
+- These 10 requests wait for a connection.
+- If no connection becomes available within the configured timeout, the application throws a connection acquisition timeout exception.
+In Spring Boot, HikariCP is the default connection pool in most standard JDBC/JPA configurations.
+1. How does connection pool exhaustion happen?
+Common reasons:
+1. Long-running queries: SQL queries take too much time to execute.
+2. Connection leaks: Connections are not released properly.
+3. Long transactions: Transactions remain open for too long.
+4. Slow database: Database performance degrades.
+5. Insufficient pool size: Pool capacity is too small for the workload.
+6. Too much concurrency: More requests arrive than the pool can handle.
+2. How would I troubleshoot and fix it?
+I would follow these steps:
+
+Step 1: Monitor connection pool metrics
+
+Check:
+- Active connections.
+- Idle connections.
+- Maximum pool size.
+- Pending connection requests.
+- Connection acquisition timeout.
+HikariCP exposes useful metrics through Spring Boot Actuator and Micrometer.
+
+Step 2: Identify connection leaks
+
+Enable leak detection:
+spring.datasource.hikari.leak-detection-threshold=20000
+
+
+This logs a warning when a connection is held longer than the configured threshold (20 seconds). It does not automatically fix or reclaim the connection.
+
+Step 3: Optimize slow SQL queries
+- Analyze slow query logs.
+- Add appropriate database indexes.
+- Avoid unnecessary joins.
+- Avoid N+1 query problems.
+- Use pagination for large datasets.
+Step 4: Reduce transaction duration
+- Keep @Transactional methods short.
+- Avoid external API calls inside database transactions.
+- Don't perform unnecessary business logic while holding a connection.
+- Avoid waiting or sleeping inside a transaction.
+Step 5: Tune connection pool size
+
+Configure HikariCP appropriately:
+spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+
+
+Don't blindly increase the pool size. The database itself has a maximum connection capacity, and excessive connections can reduce database performance.
+3. Spring Boot configuration example
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+
+These are example values, not universal recommendations. Tune them based on database capacity and load testing.
+4. Important interview follow-up: How do you identify a connection leak?
+Use try-with-resources for manually managed JDBC connections:
+try (Connection con = dataSource.getConnection()) {
+    // Execute database operation
+}
+
+
+With Spring Data JPA, Spring normally manages connection lifecycle for you. Avoid manually closing connections managed by the framework.
+5. Best answer to speak in an interview
+"I would first investigate why the connection pool is exhausted rather than immediately increasing its size.
+
+I would monitor HikariCP metrics such as active, idle and pending connections. Then I would check for connection leaks, long-running SQL queries and long-running transactions.
+
+I would optimize slow queries, add appropriate indexes, reduce transaction duration and ensure database connections are released properly.
+
+After identifying the bottleneck, I would tune HikariCP parameters like maximum pool size, minimum idle connections and connection timeout based on database capacity.
+
+Finally, I would implement monitoring and alerts using Spring Boot Actuator, Micrometer and Prometheus/Grafana to identify future connection pool issues."
