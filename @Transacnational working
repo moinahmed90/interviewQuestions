@@ -1,0 +1,460 @@
+# **Interview Question: How does&#x20;**`@Transactional`**&#x20;work internally in Spring Boot?**
+
+
+
+Frequently Asked Senior Java Developer Question
+
+Spring Boot + AOP + Hibernate
+
+
+
+The most important thing to understand is:
+
+`@Transactional`**&#x20;works internally using Spring AOP (Aspect-Oriented Programming), proxies, and a PlatformTransactionManager.**
+
+It is not simply an annotation that automatically commits or rolls back database operations. Spring creates a proxy around your bean, intercepts method calls, manages the transaction, and decides whether to commit or roll back.
+
+Let's understand it step by step.
+
+## **1. What happens when we use @Transactional?**
+
+Suppose we have a payment service:
+
+```
+@Service
+public class PaymentService {
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Transactional
+    public void transferMoney() {
+
+        debitAccount(1000);
+
+        creditAccount(1000);
+    }
+}
+```
+
+We want both operations to succeed together.
+
+- Debit account: ₹1,000.
+- Credit account: ₹1,000.
+- If credit fails, debit should also be rolled back.
+
+Spring manages this using a transaction.
+
+## **2. Internal working architecture**
+
+[Data Access](https://images.openai.com/static-rsc-4/3Eko40dX8nFUmuAlkbe9Ds8N_dwn30DEjqt7j4gn1sUixcG_HkdH7-pCj_cf-I66Dw1Ui97jf0G5nd4sn_P0ecC9gQrWw-5BfuDQFBOtORoA7f8NE24RZltlz1Ow1bptlEyb-ORqbs4vdhVce_ZvW9Nc5IrdsjVufckClYEo2to?purpose=inline)
+
+[docs.spring.io](https://docs.spring.io/spring-framework/docs/5.1.8.RELEASE/spring-framework-reference/data-access.html?utm_source=chatgpt.com)
+
+The internal execution flow looks like this:
+
+**1. Client**
+
+Calls transferMoney()
+
+**2. Spring AOP Proxy**
+
+Intercepts the method call
+
+**3. TransactionInterceptor**
+
+Reads @Transactional configuration
+
+**4. PlatformTransactionManager**
+
+Begins or joins a transaction
+
+**5. Actual Service Method**
+
+Executes business logic and database operations
+
+**Success**
+
+Commit transaction
+
+**Failure**
+
+Rollback transaction
+
+## **3. Step-by-step internal execution**
+
+**Step 1: Spring creates a proxy**
+
+When Spring starts the application, it identifies beans containing transactional methods.
+
+Spring creates a proxy around the original bean.
+
+Two common proxy mechanisms:
+
+- JDK Dynamic Proxy – when using interface-based proxying.
+- CGLIB Proxy – when using class-based proxying.
+
+**Step 2: Method interception**
+
+When another Spring bean calls `transferMoney()`, the call goes through the proxy instead of directly reaching the original method.
+
+**Step 3: TransactionInterceptor executes**
+
+Spring's `TransactionInterceptor` intercepts the method call.
+
+It reads the transaction metadata, such as:
+
+- Propagation
+- Isolation
+- Timeout
+- Read-only
+- Rollback rules
+
+**Step 4: TransactionManager starts the transaction**
+
+Spring uses `PlatformTransactionManager` to manage the transaction.
+
+Common implementations:
+
+| Transaction manager            | Purpose                                          |
+| ------------------------------ | ------------------------------------------------ |
+| `DataSourceTransactionManager` | JDBC transactions                                |
+| `JpaTransactionManager`        | JPA/Hibernate transactions                       |
+| `JtaTransactionManager`        | Distributed transaction coordination through JTA |
+
+**Step 5: Execute business logic**
+
+The actual service method executes.
+
+Spring associates transaction resources with the current thread. For example, with JDBC, a database connection is bound to the current thread through `TransactionSynchronizationManager`.
+
+**Step 6: Commit or rollback**
+
+- If the method completes successfully, Spring commits the transaction.
+- If an unchecked exception occurs, Spring rolls back by default.
+- If a checked exception occurs, Spring commits by default unless rollback rules are configured.
+
+## **4. What happens internally in the database?**
+
+Consider this example:
+
+```
+@Transactional
+public void transferMoney() {
+
+    accountRepository.debit(1000);
+
+    accountRepository.credit(1000);
+
+}
+```
+
+Internally:
+
+| Step | Operation              | Transaction |
+| ---- | ---------------------- | ----------- |
+| 1    | Begin transaction      | Active      |
+| 2    | Debit ₹1,000           | Active      |
+| 3    | Credit ₹1,000          | Active      |
+| 4    | Method completes       | Commit      |
+| 5    | If an exception occurs | Rollback    |
+
+The important point is that both database operations participate in the same transaction.
+
+If the second operation fails with a rollback-triggering exception, the first operation is also rolled back.
+
+## **5. Important: Why does @Transactional sometimes not work?**
+
+This is one of the most frequently asked follow-up questions in interviews.
+
+**Reason: Spring AOP proxy limitation (self-invocation).**
+
+Consider:
+
+```
+@Service
+public class EmployeeService {
+
+    public void saveEmployee() {
+        saveEmployeeDetails();
+    }
+
+    @Transactional
+    public void saveEmployeeDetails() {
+        // Database operation
+    }
+}
+```
+
+Here, `saveEmployee()` calls `saveEmployeeDetails()` from the same class.
+
+This is called self-invocation.
+
+The internal method call does not pass through the Spring proxy. Therefore, the transaction interceptor is bypassed, and `@Transactional` might not work.
+
+**Solution:** Move the transactional method to another Spring-managed service and invoke it through that bean's proxy.
+
+Other common reasons:
+
+- Method or class is not managed by Spring.
+- Method visibility or proxy limitations.
+- Incorrect transaction manager configuration.
+- Exception is caught and swallowed inside the transactional method.
+- Checked exception occurs without an explicit rollback rule.
+
+## **6. Rollback rules: Checked vs Unchecked exceptions**
+
+By default, Spring behaves like this:
+
+| Exception                                           | Default behavior       |
+| --------------------------------------------------- | ---------------------- |
+| RuntimeException                                    | Rollback               |
+| NullPointerException                                | Rollback               |
+| IllegalArgumentException                            | Rollback               |
+| SQLException (if propagated as a checked exception) | No rollback by default |
+| IOException                                         | No rollback by default |
+
+You can explicitly configure rollback:
+
+```
+@Transactional(
+    rollbackFor = Exception.class
+)
+public void saveEmployee() throws Exception {
+
+    employeeRepository.save(employee);
+
+    throw new IOException("Something went wrong");
+}
+```
+
+Now Spring rolls back even for the checked exception.
+
+## **7. Important @Transactional attributes**
+
+These are especially important for senior-level interviews.
+
+| Attribute       | Purpose                                                      |
+| --------------- | ------------------------------------------------------------ |
+| `propagation`   | Defines how a method participates in an existing transaction |
+| `isolation`     | Controls visibility of concurrent transactions               |
+| `readOnly`      | Marks a transaction as read-only                             |
+| `timeout`       | Sets transaction timeout                                     |
+| `rollbackFor`   | Specifies exceptions that trigger rollback                   |
+| `noRollbackFor` | Specifies exceptions that should not trigger rollback        |
+
+### **Understanding propagation**
+
+The most important propagation types:
+
+| Propagation   | Meaning                                                           |
+| ------------- | ----------------------------------------------------------------- |
+| REQUIRED      | Uses existing transaction or creates a new one                    |
+| REQUIRES_NEW  | Suspends existing transaction and creates a new one               |
+| SUPPORTS      | Uses existing transaction if available                            |
+| MANDATORY     | Requires an existing transaction                                  |
+| NOT_SUPPORTED | Executes without a transaction                                    |
+| NEVER         | Throws exception if an existing transaction exists                |
+| NESTED        | Uses a nested transaction, typically with savepoints if supported |
+
+Example:
+
+```
+@Transactional(
+    propagation = Propagation.REQUIRES_NEW
+)
+public void saveAuditLog() {
+    // Independent transaction
+}
+```
+
+Even if the outer transaction rolls back, the audit transaction can commit independently.
+
+## **8. What is TransactionSynchronizationManager?**
+
+This is a particularly good advanced interview question.
+
+Spring uses `TransactionSynchronizationManager` to manage transaction resources associated with the current thread.
+
+For example:
+
+- Database connection.
+- Transaction synchronization callbacks.
+- Transaction name.
+- Transaction read-only status.
+- Transaction active status.
+
+You can check:
+
+```
+boolean active =
+    TransactionSynchronizationManager
+        .isActualTransactionActive();
+
+System.out.println(active);
+```
+
+This helps understand how Spring manages transaction context internally.
+
+**Important:** Traditional Spring imperative transactions are thread-bound. They do not automatically propagate to newly created threads using `@Async` or `new Thread()`.
+
+## **9. One more important concept: Hibernate and @Transactional**
+
+Since Spring Boot applications commonly use Spring Data JPA and Hibernate, understand this distinction.
+
+When you call:
+
+```
+@Transactional
+public void saveEmployee() {
+
+    Employee employee = new Employee();
+
+    employee.setName("Moin");
+
+    entityManager.persist(employee);
+
+}
+```
+
+Hibernate does not necessarily execute the SQL INSERT immediately.
+
+It can maintain changes in the Persistence Context (first-level cache) and synchronize them with the database during flush.
+
+Flush generally happens before transaction commit, although it can also happen earlier.
+
+The sequence is:
+
+1. Begin transaction.
+2. Hibernate manages entities in Persistence Context.
+3. Entity changes are tracked.
+4. Hibernate flushes pending changes to the database.
+5. Transaction manager commits the transaction.
+
+This is why you may see SQL INSERT statements in Hibernate logs around flush time rather than exactly when `persist()` is called.
+
+## **10. Top 7 follow-up interview questions**
+
+Try answering these to check your understanding.
+
+**Test your knowledge**
+
+7/7 answered
+
+**1. Which mechanism does Spring use internally to implement @Transactional?**
+
+Servlet Filter
+
+Spring AOP Proxy
+
+JVM Reflection only
+
+Hibernate Interceptor
+
+**Correct**
+
+Spring AOP proxies intercept method calls and delegate transaction handling to TransactionInterceptor.
+
+**2. Which component is responsible for managing transactions?**
+
+DispatcherServlet
+
+EntityManagerFactory
+
+PlatformTransactionManager
+
+ApplicationContext
+
+**Correct**
+
+PlatformTransactionManager provides the abstraction for beginning, committing and rolling back transactions.
+
+**3. What happens when a checked exception is thrown by default?**
+
+Always rollback
+
+Commit by default
+
+Application stops
+
+Transaction is suspended
+
+**Correct answer: Commit by default**
+
+Spring rolls back by default for RuntimeException and Error, not checked exceptions.
+
+**4. Why can @Transactional fail during self-invocation?**
+
+Hibernate is disabled
+
+Call bypasses the proxy
+
+Database connection is closed
+
+JPA doesn't support it
+
+**Correct**
+
+A call from one method to another within the same object does not pass through the Spring proxy.
+
+**5. Which propagation creates an independent transaction?**
+
+REQUIRED
+
+SUPPORTS
+
+REQUIRES_NEW
+
+MANDATORY
+
+**Correct**
+
+REQUIRES_NEW suspends the outer transaction and starts an independent transaction.
+
+**6. Where does Spring bind imperative JDBC transaction resources?**
+
+HTTP Session
+
+Thread-local transaction context
+
+Redis
+
+Application properties
+
+**Correct answer: Thread-local transaction context**
+
+TransactionSynchronizationManager maintains resources associated with the current thread.
+
+**7. When does Hibernate generally synchronize pending entity changes with the database?**
+
+Only when the application starts
+
+During flush
+
+Immediately on every setter call
+
+Only when the application stops
+
+**Correct**
+
+Hibernate flushes pending changes before commit, and sometimes earlier depending on flush mode and query execution.
+
+# **Your score: 5/7**
+
+Retry quiz
+
+## **Final interview answer (60-second version)**
+
+If the interviewer asks, "Explain how @Transactional works internally", you can answer:
+
+"Spring implements declarative transaction management using AOP proxies. When Spring detects a bean with the @Transactional annotation, it creates a proxy around that bean.
+
+Whenever another Spring bean calls a transactional method, the proxy intercepts the method call. The TransactionInterceptor reads the transaction configuration and delegates to PlatformTransactionManager.
+
+The transaction manager starts a new transaction or joins an existing one depending on the propagation setting. The database connection and transaction resources are associated with the current thread.
+
+Then the actual business method executes. If it completes successfully, Spring commits the transaction. If a RuntimeException or Error occurs, Spring rolls back by default.
+
+There are two important things to remember: self-invocation bypasses the proxy, and checked exceptions do not trigger rollback by default."
+
+**My recommendation:** For a senior Java developer interview, focus especially on AOP Proxy, TransactionInterceptor, PlatformTransactionManager, Propagation, Rollback Rules, and Self-Invocation. These are the concepts that demonstrate real understanding beyond simply knowing the annotation.
