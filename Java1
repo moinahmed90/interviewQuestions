@@ -37,3 +37,9 @@ A. We can prevent one failing microservice from bringing down the entire applica
 A.  To secure this communication, I would implement a combination of Authentication, Authorization, Encryption, and Network Security
 
 15. How would you design a backend system to handle 10× traffic without downtime?
+
+16. Suppose we have 3 Kafka brokers and Broker 1 suddenly goes down. What happens?
+A. If Broker 1 goes down, Kafka checks whether the partitions hosted on that broker have available replicas on other brokers.
+  If a suitable in-sync replica (ISR) exists, Kafka can elect it as the new leader.
+  Producers and consumers can then continue working with the new leader.
+  However, if no eligible replica is available, the affected partition may become unavailable until recovery.
