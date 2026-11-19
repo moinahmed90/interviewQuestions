@@ -1,0 +1,33 @@
+6  ssh-keygen
+    7  cd /root/.ssh/
+    8  cd root
+    9  cd /root
+   10  ls
+   11  cat id_ed25519.pub
+   12  mkdir moin
+   13  kubectl get nodea
+   14  kubectl get nodes
+   15  cls
+   16  clear
+   17  gcloud container clusters get-credentials day1 --region us-east4 --project project-30d255af-4acb-47a3-86a
+   18  kubectl get nodes
+   19  kubectl get ns
+   20  kubectl create ns dev
+   21  kubectl get ns
+   22  clear
+   23  ls
+   24  mkdir batch45
+   25  cd batch45/
+   26  ls
+   27  vi qans.yaml
+   28  ls
+   29  kubectl create -f qans.yaml
+   30  kubectl get ns
+   31  ls
+   32  gcloud container clusters get-credentials day2 --region us-east4 --project project-30d255af-4acb-47a3-86a
+   33  kubectl run nginx --image=nginx:1.16
+   34  kubectl get pods
+   35  kubectl get svc
+   36  kubectl logs nginx
+   37  history
+moin_ahmed90@cloudshell:~ (project-30d255af-4acb-47a3-86a)$ 
